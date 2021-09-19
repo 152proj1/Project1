@@ -65,12 +65,14 @@ public class nlexer {
         do {
             String sWord;
             //prevWord = nextWord;
-            if (specFlag) {
-                //System.out.println("**RETURNING : " + nextWord);
-                sWord = "" + prevChar;
-            }
-
-            sWord =  "" + nextWord;
+            //if (specFlag) {
+            //    //System.out.println("**RETURNING : " + nextWord);
+            //    sWord = "" + prevChar;
+            //    specFlag = false;
+            //}
+            //else {
+                sWord =  "" + nextWord;
+            //}
             //prevWord = nextWord;
             if (rawReadValue == -1) {
                 found = true;
