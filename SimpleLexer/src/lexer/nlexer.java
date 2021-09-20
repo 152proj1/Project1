@@ -16,6 +16,9 @@ public class nlexer {
     public static char lookAhead;
     public static char currentChar;
 
+    static char prevChar;
+    
+
     public static boolean EOFflag = false;
     public static boolean found = false;
     public static boolean done = false;
@@ -33,24 +36,27 @@ public class nlexer {
 
         readChar(br);
         do  {
-            getNextToken(br);
+            printToken(getNextToken(br));
         } while (!done);
-
         br.close();
-
         System.out.println("      ***  DONE  ***\n");
     }
 
     public static Token getNextToken(BufferedReader b) throws IOException {
-        // System.out.println("\nGetting Next Token: ");
-        // System.out.println(" currentChar: " + currentChar);
         readWord(b);
         if (EOFflag) {
             done = true;
-            System.out.println("            EOF flagged");
+            System.out.println("            spc EOF flagged");
             return Token.EOF;
         }
-        System.out.println("    returning nextWord Token: " + nextWord);
+
+        if(tokens.containsKey(""+nextWord)) {
+            //System.out.println("Token matched ");
+            return tokens.get("" + nextWord);
+        } //else if {
+
+        //}
+        //System.out.println("    returning nextWord Token: " + nextWord);
         return new Token("" + nextWord);
 
     }
@@ -85,15 +91,17 @@ public class nlexer {
                 }
             } else {
                 while (!isDelim(lookAhead)) {
+                    prevChar = currentChar;
                     nextWord.append(currentChar);
                     readChar(b);
                 }
-                nextWord.append(currentChar);
+                    nextWord.append(currentChar);
             }
         } else {
+            System.out.println(" EOF flagged");
+            found = true;
             nextWord.append(currentChar);
         }
-        // if (EOFflag) System.out.println(" EOF flagged");
     }
 
     static void readChar(BufferedReader b) throws IOException {
@@ -102,30 +110,13 @@ public class nlexer {
         lookAhead = (char) rawReadValue;
         if (rawReadValue == -1) {
             EOFflag = true;
-            // System.out.println(" EOF flagged");
         } else if (isSpace(currentChar)) {
             readChar(b);
-        } else {
-            // System.out.println(" currentChar set to: " + currentChar);
-            // System.out.println(" lookAhead set to: " + lookAhead);
-        }
-
+        } 
     }
 
     static boolean isDelim(char c) throws IOException {
-        switch (c) {
-            case '\n':
-                currentLine++;
-                return true;
-            case '\t':
-                return true;
-            case ' ':
-                return true;
-        }
-
-        if (stops.contains("" + c))
-            return true;
-
+        if (isSpace(c) || stops.contains("" + c)) return true;
         return false;
     }
 
@@ -138,8 +129,18 @@ public class nlexer {
                 return true;
             case ' ':
                 return true;
-
         }
         return false;
+    }
+
+    public static void printToken(Token t) throws IOException {
+        System.out.print("" + t.name);
+        if (t.name.equals("REAL"))
+            System.out.println("    " + t.floatValue);
+        else if (t.name.equals("NUM"))
+            System.out.println("    " + t.intValue);
+        else
+            System.out.println("    " + t.IDValue);
+        System.out.println();
     }
 }
