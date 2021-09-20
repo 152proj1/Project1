@@ -18,6 +18,7 @@ public class nlexer {
 
     public static boolean EOFflag = false;
     public static boolean found = false;
+    public static boolean done = false;
 
     static String stops = ";!|&><+-*/}{)(=";
 
@@ -31,9 +32,9 @@ public class nlexer {
         BufferedReader br = new BufferedReader(fr);
 
         readChar(br);
-        while (!EOFflag) {
+        do  {
             getNextToken(br);
-        }
+        } while (!done);
 
         br.close();
 
@@ -41,9 +42,14 @@ public class nlexer {
     }
 
     public static Token getNextToken(BufferedReader b) throws IOException {
-        //System.out.println("\nGetting Next Token: ");
-        //System.out.println("    currentChar: " + currentChar);
+        // System.out.println("\nGetting Next Token: ");
+        // System.out.println(" currentChar: " + currentChar);
         readWord(b);
+        if (EOFflag) {
+            done = true;
+            System.out.println("            EOF flagged");
+            return Token.EOF;
+        }
         System.out.println("    returning nextWord Token: " + nextWord);
         return new Token("" + nextWord);
 
@@ -56,18 +62,38 @@ public class nlexer {
         String specialCase = "" + currentChar + lookAhead;
 
         if (!EOFflag) {
-            if (specialCase.equals("<=")) {
-                nextWord.append(specialCase);
-                readChar(b);
+            if (currentChar == '=' || currentChar == '<' || currentChar == '>' || currentChar == '!') {
+                if (lookAhead == '=') {
+                    nextWord.append(specialCase);
+                    readChar(b);
+                } else {
+                    nextWord.append(currentChar);
+                }
+            } else if (currentChar == '&') {
+                if (lookAhead == '&') {
+                    nextWord.append(specialCase);
+                    readChar(b);
+                } else {
+                    nextWord.append(currentChar);
+                }
+            } else if (currentChar == '|') {
+                if (lookAhead == '|') {
+                    nextWord.append(specialCase);
+                    readChar(b);
+                } else {
+                    nextWord.append(currentChar);
+                }
             } else {
-
                 while (!isDelim(lookAhead)) {
                     nextWord.append(currentChar);
                     readChar(b);
                 }
                 nextWord.append(currentChar);
             }
+        } else {
+            nextWord.append(currentChar);
         }
+        // if (EOFflag) System.out.println(" EOF flagged");
     }
 
     static void readChar(BufferedReader b) throws IOException {
@@ -76,12 +102,12 @@ public class nlexer {
         lookAhead = (char) rawReadValue;
         if (rawReadValue == -1) {
             EOFflag = true;
-            System.out.println("            EOF flagged");
+            // System.out.println(" EOF flagged");
         } else if (isSpace(currentChar)) {
             readChar(b);
         } else {
-            //System.out.println("        currentChar set to: " + currentChar);
-            //System.out.println("        lookAhead set to: " + lookAhead);
+            // System.out.println(" currentChar set to: " + currentChar);
+            // System.out.println(" lookAhead set to: " + lookAhead);
         }
 
     }
