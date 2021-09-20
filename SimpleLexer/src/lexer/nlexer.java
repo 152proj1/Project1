@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-//import java.util.ArrayList;
 import java.util.HashMap;
 
 public class nlexer {
@@ -13,149 +12,108 @@ public class nlexer {
     public static int rawReadValue;
     public static int currentLine = 0;
 
-    public static char nextChar;
     static StringBuffer nextWord = new StringBuffer();
-    public static char prevChar;
-    static StringBuffer prevWord = new StringBuffer();
-    static String stops = ";!|&><+-*/}{)(=";
+    public static char lookAhead;
+    public static char currentChar;
 
-    static boolean found = false;
-    static boolean EOFflag = false;
-    static boolean scanning = false;
-    static boolean specFlag = false;
- 
-    static StringBuffer specialCase = new StringBuffer();
+    public static boolean EOFflag = false;
+    public static boolean found = false;
+
+    static String stops = ";!|&><+-*/}{)(=";
 
     public static void main(String[] args) throws IOException {
         System.out.println("\n      ***  START  ***\n");
-        File f = new File("test_file.txt"); // Creation of File Descriptor for input file
-        FileReader fr = new FileReader(f); // Creation of File Reader object
-        BufferedReader br = new BufferedReader(fr);
 
         Token.initTokenTable(tokens);
-        readChar(br);
-        do {
-            System.out.println();
-            //getNextToken(br);
-            printToken(getNextToken(br));
-            found = false;
-        }while(!EOFflag);
-        
 
-        System.out.println("\n      ***  DONE  ***");
+        File f = new File("test_file.txt");
+        FileReader fr = new FileReader(f);
+        BufferedReader br = new BufferedReader(fr);
+
+        readChar(br);
+        while (!EOFflag) {
+            getNextToken(br);
+        }
+
+        br.close();
+
+        System.out.println("      ***  DONE  ***\n");
     }
 
-    static Token getNextToken(BufferedReader b) throws IOException {
-        if (rawReadValue == -1) {
-            found = true;
-            EOFflag=true;
-            //System.out.println("EOF"); //debug
-            return Token.EOF;
-        }
- 
-        StringBuffer nullString = new StringBuffer();
-        nullString.append("");
-        nextWord = nullString;
-        prevWord = nextWord;
+    public static Token getNextToken(BufferedReader b) throws IOException {
+        //System.out.println("\nGetting Next Token: ");
+        //System.out.println("    currentChar: " + currentChar);
+        readWord(b);
+        System.out.println("    returning nextWord Token: " + nextWord);
+        return new Token("" + nextWord);
 
-        nextWord.append(nextChar);
+    }
 
+    public static void readWord(BufferedReader b) throws IOException {
+        nextWord.delete(0, nextWord.length());
+        readChar(b);
 
+        String specialCase = "" + currentChar + lookAhead;
 
-        do {
-            String sWord;
-            //prevWord = nextWord;
-            //if (specFlag) {
-            //    //System.out.println("**RETURNING : " + nextWord);
-            //    sWord = "" + prevChar;
-            //    specFlag = false;
-            //}
-            //else {
-                sWord =  "" + nextWord;
-            //}
-            //prevWord = nextWord;
-            if (rawReadValue == -1) {
-                found = true;
-                return Token.EOF;
-            } else if (tokens.containsKey(sWord)) {
-                skipDelim(b);
-                //readChar(b);
-                found = true;
-                System.out.println("**Token matched: " + nextWord);
-                return tokens.get(sWord);
+        if (!EOFflag) {
+            if (specialCase.equals("<=")) {
+                nextWord.append(specialCase);
+                readChar(b);
             } else {
-                    prevWord = nextWord;
+
+                while (!isDelim(lookAhead)) {
+                    nextWord.append(currentChar);
                     readChar(b);
-                    if (isDelim(nextChar)) {
-                        //System.out.println("delim found: " + nextChar);
-                        found = true;
-                        System.out.println("**IDValue set: " + prevWord);
-                        skipDelim(b);
-                        //System.out.println("appending: " + nextWord + " + " + nextChar);
-                        return new Token("" + prevWord);
-                    }
-                    System.out.println("appending: " + nextWord + " + " + nextChar);
-                    nextWord.append(nextChar);
                 }
-        } while (!found);
-        return Token.nullToken;
+                nextWord.append(currentChar);
+            }
+        }
     }
 
     static void readChar(BufferedReader b) throws IOException {
+        currentChar = lookAhead;
         rawReadValue = b.read();
-        nextChar = (char) rawReadValue;
-    }
-
-    // public static void System.out.println();
-
-    static void skipDelim(BufferedReader b) throws IOException {  
-
-        readChar(b);       
-    
-        if (nextChar == ' ') {
-            currentLine++;
-            skipDelim(b);
-        } if (nextChar == '\n') {
-            currentLine++;
-            skipDelim(b);
-        } else if (nextChar == '\t') {
-            skipDelim(b);
-        }
-        //System.out.println("char after delim: " + nextChar); //debug
-    }
-
-    static boolean isDelim(char c) {
-        specFlag = false;
-
-
-        if (c == ' ') {
-            return true;
-        } else if (c == '\t') {
-            return true;
-        } else if (c == '\n') {
-            currentLine++;
-            return true;
-        } else if (stops.contains(""+nextChar)) {
-            System.out.println("SPECIAL: " + nextChar); //debug
-            prevChar = nextChar;
-            System.out.println("prevChar set to: " + prevChar); //debug
-            specFlag = true;
-            return true;
+        lookAhead = (char) rawReadValue;
+        if (rawReadValue == -1) {
+            EOFflag = true;
+            System.out.println("            EOF flagged");
+        } else if (isSpace(currentChar)) {
+            readChar(b);
         } else {
-            return false;
+            //System.out.println("        currentChar set to: " + currentChar);
+            //System.out.println("        lookAhead set to: " + lookAhead);
         }
+
     }
 
-    public static void printToken(Token t) throws IOException {
-        //System.out.println("Token: ");
-        //System.out.println("    tag: " + t.tag);
-        System.out.print("" + t.name);
-        if (t.name.equals("REAL"))
-            System.out.println("    "+ t.floatValue);
-        else if (t.name.equals("NUM"))
-            System.out.println("    " + t.intValue);
-        else
-            System.out.println("    " + t.IDValue);
-        System.out.println();
+    static boolean isDelim(char c) throws IOException {
+        switch (c) {
+            case '\n':
+                currentLine++;
+                return true;
+            case '\t':
+                return true;
+            case ' ':
+                return true;
+        }
+
+        if (stops.contains("" + c))
+            return true;
+
+        return false;
+    }
+
+    static boolean isSpace(char c) throws IOException {
+        switch (c) {
+            case '\n':
+                currentLine++;
+                return true;
+            case '\t':
+                return true;
+            case ' ':
+                return true;
+
+        }
+        return false;
     }
 }
