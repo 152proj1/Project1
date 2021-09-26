@@ -13,15 +13,17 @@ public class nlexer {
     public static int currentLine = 0;
 
     static StringBuffer nextWord = new StringBuffer();
+    static String specialCase;
     public static char lookAhead;
     public static char currentChar;
 
     static char prevChar;
-    
 
     public static boolean EOFflag = false;
     public static boolean found = false;
     public static boolean done = false;
+    public static boolean EOFfound = false;
+    public static boolean isNUM = false;
 
     static String stops = ";!|&><+-*/}{)(=";
 
@@ -35,42 +37,24 @@ public class nlexer {
         BufferedReader br = new BufferedReader(fr);
 
         readChar(br);
-        do  {
+        do {
             printToken(getNextToken(br));
-        } while (!done);
+        } while (!EOFflag);
         br.close();
         System.out.println("      ***  DONE  ***\n");
     }
 
     public static Token getNextToken(BufferedReader b) throws IOException {
-        readWord(b);
-        if (EOFflag) {
-            done = true;
-            System.out.println("            spc EOF flagged");
-            return Token.EOF;
-        }
 
-        if(tokens.containsKey(""+nextWord)) {
-            //System.out.println("Token matched ");
-            return tokens.get("" + nextWord);
-        } //else if {
-
-        //}
-        //System.out.println("    returning nextWord Token: " + nextWord);
-        return new Token("" + nextWord);
-
-    }
-
-    public static void readWord(BufferedReader b) throws IOException {
-        nextWord.delete(0, nextWord.length());
+        nextWord.delete(0, nextWord.length()); // = ""
         readChar(b);
+        specialCase = "" + currentChar + lookAhead;
 
-        String specialCase = "" + currentChar + lookAhead;
-
-        if (!EOFflag) {
+        if (rawReadValue != -1) {
             if (currentChar == '=' || currentChar == '<' || currentChar == '>' || currentChar == '!') {
                 if (lookAhead == '=') {
                     nextWord.append(specialCase);
+                    System.out.println(specialCase);
                     readChar(b);
                 } else {
                     nextWord.append(currentChar);
@@ -93,30 +77,56 @@ public class nlexer {
                 while (!isDelim(lookAhead)) {
                     prevChar = currentChar;
                     nextWord.append(currentChar);
+                    if (tokens.containsKey("" + nextWord)) {
+                        return tokens.get("" + nextWord);
+                    }
                     readChar(b);
                 }
-                    nextWord.append(currentChar);
+                nextWord.append(currentChar);
             }
-        } else {
-            System.out.println(" EOF flagged");
-            found = true;
-            nextWord.append(currentChar);
         }
+
+        // nextWord = "45"
+
+        if (done) {
+            System.out.println("        EOF token");
+            EOFflag = true;
+            return Token.EOF;
+        } else if (tokens.containsKey("" + nextWord)) {
+            return tokens.get("" + nextWord);
+        } else if (isNUM("" + nextWord)) { // Add logic for integer value in "isNUM" function below
+            int n;
+            n = Integer.parseInt(""+nextWord);
+            return new Token(n);
+        } else if (isNUM("" + nextWord)) { // Add logic for integer value in "isNUM" function below
+        int n;
+        n = Integer.parseInt(""+nextWord);
+        return new Token(n);
+    } else if (rawReadValue == -1) {
+            System.out.println("        ending");
+            done = true;
+            System.out.println("nextWord: " + nextWord);
+            System.out.println("currentChar: " + currentChar);
+            System.out.println("lookAhead: " + lookAhead);
+            return new Token("" + nextWord);
+        }
+        return new Token("" + nextWord);
     }
 
     static void readChar(BufferedReader b) throws IOException {
         currentChar = lookAhead;
         rawReadValue = b.read();
         lookAhead = (char) rawReadValue;
-        if (rawReadValue == -1) {
-            EOFflag = true;
-        } else if (isSpace(currentChar)) {
+        if (isSpace(currentChar)) {
             readChar(b);
-        } 
+        }
     }
 
     static boolean isDelim(char c) throws IOException {
-        if (isSpace(c) || stops.contains("" + c)) return true;
+        if (isSpace(c) || stops.contains("" + c))
+            return true;
+        if (rawReadValue == -1)
+            return true;
         return false;
     }
 
@@ -129,6 +139,17 @@ public class nlexer {
                 return true;
             case ' ':
                 return true;
+        }
+        return false;
+    }
+
+    public static boolean isNUM(String s) {
+        for (int i = 0; i < s.length(); i++) {
+            if (s.charAt(i) >= '0' && s.charAt(i) <= '9') {
+                return true;
+            } else {
+                return false;
+            }
         }
         return false;
     }
