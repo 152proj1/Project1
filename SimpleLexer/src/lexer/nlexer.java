@@ -10,51 +10,56 @@ public class nlexer {
 
     public static HashMap<String, Token> tokens = new HashMap<String, Token>();
     public static int rawReadValue;
-    public static int currentLine = 0;
+    public static int currentLine = 1;
 
     static StringBuffer nextWord = new StringBuffer();
     static String specialCase;
     public static char lookAhead;
     public static char currentChar;
 
-    static char prevChar;
-
     public static boolean EOFflag = false;
-    public static boolean found = false;
     public static boolean done = false;
-    public static boolean EOFfound = false;
-    public static boolean isNUM = false;
 
     static String stops = ";!|&><+-*/}{)(=";
 
     public static void main(String[] args) throws IOException {
         System.out.println("\n      ***  START  ***\n");
 
-        Token.initTokenTable(tokens);
+        //initializes hashMap of tokens 
+        Token.initTokenTable(tokens); 
 
+        // open the file
         File f = new File("test_file.txt");
         FileReader fr = new FileReader(f);
         BufferedReader br = new BufferedReader(fr);
 
+        // call readChar to initialize first values
         readChar(br);
+
+        System.out.println("Current Line: " + currentLine + "\n");
+        //loop until the function flags a stop
         do {
             printToken(getNextToken(br));
         } while (!EOFflag);
+
+        //close file
         br.close();
         System.out.println("      ***  DONE  ***\n");
     }
 
     public static Token getNextToken(BufferedReader b) throws IOException {
 
-        nextWord.delete(0, nextWord.length()); // = ""
+        nextWord.delete(0, nextWord.length()); //sets nextWord to empty string so the function can start scanning the token
         readChar(b);
-        specialCase = "" + currentChar + lookAhead;
+        specialCase = "" + currentChar + lookAhead; //combines currentChar and lookAhead to look for special case tokens like == or ||
 
+
+
+        // These if statements set the nextWord to the next token value.
         if (rawReadValue != -1) {
-            if (currentChar == '=' || currentChar == '<' || currentChar == '>' || currentChar == '!') {
+            if ((currentChar == '=' || currentChar == '<' || currentChar == '>' || currentChar == '!')) {
                 if (lookAhead == '=') {
                     nextWord.append(specialCase);
-                    System.out.println(specialCase);
                     readChar(b);
                 } else {
                     nextWord.append(currentChar);
@@ -75,7 +80,6 @@ public class nlexer {
                 }
             } else {
                 while (!isDelim(lookAhead)) {
-                    prevChar = currentChar;
                     nextWord.append(currentChar);
                     if (tokens.containsKey("" + nextWord)) {
                         return tokens.get("" + nextWord);
@@ -85,55 +89,57 @@ public class nlexer {
                 nextWord.append(currentChar);
             }
         }
-
-        // nextWord = "45"
+    
 
         if (done) {
             System.out.println("        EOF token");
             EOFflag = true;
             return Token.EOF;
-        } else if (tokens.containsKey("" + nextWord)) {
+        } else if (tokens.containsKey("" + nextWord)) { // return the token if it's recognized from the predefined tokens table
             return tokens.get("" + nextWord);
         } else if (isNUM("" + nextWord)) { // Add logic for integer value in "isNUM" function below
             int n;
             n = Integer.parseInt(""+nextWord);
             return new Token(n);
-        } else if (isNUM("" + nextWord)) { // Add logic for integer value in "isNUM" function below
-        int n;
-        n = Integer.parseInt(""+nextWord);
-        return new Token(n);
-    } else if (rawReadValue == -1) {
+        } else if (isREAL("" + nextWord)) { // Add logic for integer value in "isNUM" function below
+            float f = Float.parseFloat(""+nextWord);
+            return new Token(f);
+        } else if (rawReadValue == -1) { // Add logic for final word
             System.out.println("        ending");
             done = true;
-            System.out.println("nextWord: " + nextWord);
-            System.out.println("currentChar: " + currentChar);
-            System.out.println("lookAhead: " + lookAhead);
+            //System.out.println("nextWord: " + nextWord);
+            //System.out.println("currentChar: " + currentChar);
+            //System.out.println("lookAhead: " + lookAhead);
             return new Token("" + nextWord);
-        }
+        } 
         return new Token("" + nextWord);
     }
 
+    // Sets currentChar, rawReadValue, and lookAhead
     static void readChar(BufferedReader b) throws IOException {
-        currentChar = lookAhead;
-        rawReadValue = b.read();
-        lookAhead = (char) rawReadValue;
+        currentChar = lookAhead; // the currentChar actually records the lookAhead that was read in previously.
+        rawReadValue = b.read(); //rawReadValue records actual character number, so we can find EOF with rawReadValue == -1.
+        lookAhead = (char) rawReadValue; //sets char lookAhead to character of whatever rawReadValue was just read in.
         if (isSpace(currentChar)) {
             readChar(b);
         }
     }
 
-    static boolean isDelim(char c) throws IOException {
-        if (isSpace(c) || stops.contains("" + c))
-            return true;
-        if (rawReadValue == -1)
+
+    // boolean flag to separate tokens, returns true if the lookAhead is a "space," single token, or eof.
+    static boolean isDelim(char c) throws IOException { 
+        if (isSpace(c) || stops.contains("" + c) || rawReadValue == -1)
             return true;
         return false;
     }
 
+
+    // another flag to separate tokens, but put into a different function for specific use cases.
     static boolean isSpace(char c) throws IOException {
         switch (c) {
             case '\n':
                 currentLine++;
+                System.out.println("Current Line: " + currentLine + "\n");
                 return true;
             case '\t':
                 return true;
@@ -143,6 +149,8 @@ public class nlexer {
         return false;
     }
 
+
+    // returns true if input string is an integer value
     public static boolean isNUM(String s) {
         for (int i = 0; i < s.length(); i++) {
             if (s.charAt(i) >= '0' && s.charAt(i) <= '9') {
@@ -153,9 +161,22 @@ public class nlexer {
         }
         return false;
     }
+    
+    // returns true if input string is a float value
+    public static boolean isREAL(String s) {
+        for (int i = 0; i < s.length(); i++) {
+            if (s.charAt(i) >= '0' && s.charAt(i) <= '9') {
+                return true;
+            } else {
+                return false;
+            }
+        }
+        return false;
+    }
 
+    // prints token in the form "token name" + "token value"
     public static void printToken(Token t) throws IOException {
-        System.out.print("" + t.name);
+        System.out.print("  " + t.name);
         if (t.name.equals("REAL"))
             System.out.println("    " + t.floatValue);
         else if (t.name.equals("NUM"))
@@ -165,3 +186,5 @@ public class nlexer {
         System.out.println();
     }
 }
+
+
