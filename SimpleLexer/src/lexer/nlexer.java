@@ -96,21 +96,18 @@ public class nlexer6 {
         } else if (tokens.containsKey("" + nextWord)) { // return the token if it's recognized from the predefined
                                                         // tokens table
             return tokens.get("" + nextWord);
-        } else if (isNUM("" + nextWord)) { // Add logic for integer value in "isNUM" function below
+        } else if (isNUM("" + nextWord)) { // checks if nextWord is an int
             int n = Integer.parseInt("" + nextWord);
-            return new Token(n);
-        } else if (isREAL("" + nextWord)) { // Add logic for integer value in "isREAL" function below
+            return new Token(n); // returns NUM token
+        } else if (isREAL("" + nextWord)) { // checks if nextWord is a float
             float f = Float.parseFloat("" + nextWord);
-            return new Token(f);
+            return new Token(f); // returns REAL token
         } else if (rawReadValue == -1) { // Add logic for final word
             System.out.println("        ending");
             done = true;
-            // System.out.println("nextWord: " + nextWord);
-            // System.out.println("currentChar: " + currentChar);
-            // System.out.println("lookAhead: " + lookAhead);
             return new Token("" + nextWord);
         }
-        return new Token("" + nextWord);
+        return new Token("" + nextWord); // return ID token
     }
 
     // Sets currentChar, rawReadValue, and lookAhead
