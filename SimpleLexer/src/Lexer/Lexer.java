@@ -92,29 +92,6 @@ public class Lexer {
             }
         } else
             return new Token("" + nextWord); // returns ID token
-
-        // System.out.println("hgdfgfdfdg");
-
-        // if (done) return new Token("" + currentChar);
-        // else return new Token("" + nextWord);
-
-        /*
-         * if (done) { EOFflag = true; return Token.EOF; } else if
-         * (tokens.containsKey("" + nextWord)) { // return the token if it's recognized
-         * from the predefined // tokens table return tokens.get("" + nextWord); } else
-         * if (isNUM("" + nextWord)) { // checks if nextWord is an int int n =
-         * Integer.parseInt("" + nextWord); return new Token(n); // returns NUM token }
-         * else if (isREAL("" + nextWord)) { // checks if nextWord is a float float f =
-         * Float.parseFloat("" + nextWord); return new Token(f); // returns REAL token }
-         * else if (rawReadValue == -1) { // activates if last token is a single
-         * character done = true; if (tokens.containsKey("" + currentChar)) { return
-         * tokens.get("" + currentChar); } else { System.out.println("uhh");
-         * System.out.println("nextWord: " + nextWord); return new Token("" +
-         * currentChar); } } else return new Token("" + nextWord); // returns ID token
-         * 
-         * 
-         */
-
     }
 
     // Sets currentChar, rawReadValue, and lookAhead
