@@ -1,3 +1,0 @@
-{    
-    if int bjj <= f; b = 1 ; 
-    
