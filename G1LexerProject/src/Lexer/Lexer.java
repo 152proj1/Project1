@@ -98,7 +98,7 @@ public class Lexer {
     }
 
     // Sets currentChar, rawReadValue, and lookAhead
-    void readChar(BufferedReader b) throws IOException {
+    public void readChar(BufferedReader b) throws IOException {
         currentChar = lookAhead; // the currentChar actually records the lookAhead that was read in previously.
         rawReadValue = b.read(); // rawReadValue records actual character number, so we can find EOF with
                                  // rawReadValue == -1.
@@ -110,7 +110,7 @@ public class Lexer {
 
     // Boolean flag to separate tokens, returns true if the lookAhead is a space,
     // single token, or eof.
-    boolean isDelim(char c) throws IOException {
+    public boolean isDelim(char c) throws IOException {
         String stops = ";!|&><+-*/}{)(=";
         if (isSpace(c) || stops.contains("" + c) || rawReadValue == -1)
             return true;
@@ -119,7 +119,7 @@ public class Lexer {
 
     // another flag to separate tokens, returns true if lookAhead is a new line,
     // tab, or space.
-    boolean isSpace(char c) throws IOException {
+    public boolean isSpace(char c) throws IOException {
         switch (c) {
             case '\n':
                 currentLine++;
