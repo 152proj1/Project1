@@ -59,7 +59,7 @@ public class Lexer {
                     nextWord.append(currentChar);
                 }
             } else {
-                while (!isDelim(lookAhead)) {
+                while (!isDelim(lookAhead)) { // skips nontokens and moves onto next token
                     nextWord.append(currentChar);
                     if (tokens.containsKey("" + nextWord)) {
                         return tokens.get("" + nextWord);
